@@ -1,1 +1,0 @@
-# Q-Pilot-Quantum-Enhanced-Vehicle-Trajectory-Prediction-System
