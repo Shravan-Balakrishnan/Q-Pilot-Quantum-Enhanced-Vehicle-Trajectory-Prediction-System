@@ -36,11 +36,16 @@ class LinearTrajectoryPredictor:
         """
         # Flatten the sequence dimension for linear regression
         X_flat = X.reshape(X.shape[0], -1)
+        
+        # Flatten the target time and feature dimensions
+        # y_flat will be (samples, pred_length * features)
+        y_flat = y.reshape(y.shape[0], -1)
 
-        # Train separate model for each output dimension
+        # Train a single multi-output model or separate models
+        # For simplicity and to match the current structure, we'll use one model per output value
+        # but with consistent sample counts
         for i in range(self.output_dim):
-            y_flat = y[:, :, i].flatten()  # Flatten across samples and time steps
-            self.models[i].fit(X_flat, y_flat)
+            self.models[i].fit(X_flat, y_flat[:, i])
 
     def predict(self, X):
         """
@@ -57,13 +62,12 @@ class LinearTrajectoryPredictor:
 
         # Predict for each output dimension
         for i in range(self.output_dim):
-            pred_flat = self.models[i].predict(X_flat)
-            # Reshape to (samples, pred_length)
-            pred_reshaped = pred_flat.reshape(X.shape[0], -1)
-            predictions.append(pred_reshaped)
+            pred = self.models[i].predict(X_flat)
+            predictions.append(pred)
 
-        # Stack predictions along feature dimension
-        return np.stack(predictions, axis=-1)
+        # Stack and reshape to (samples, pred_length, features)
+        all_preds = np.column_stack(predictions)
+        return all_preds.reshape(X.shape[0], -1, X.shape[2])
 
 
 class LSTMTrajectoryPredictor(nn.Module):
@@ -279,11 +283,17 @@ class ClassicalModelEnsemble:
         """
         # Flatten the sequence dimension
         X_flat = X.reshape(X.shape[0], -1)
+        
+        # Flatten target (samples, pred_length * features)
+        y_flat = y.reshape(y.shape[0], -1)
 
-        # Train separate model for each output dimension
-        for i in range(self.output_features):
-            y_flat = y[:, :, i].flatten()
-            self.rf_models[i].fit(X_flat, y_flat)
+        # Train separate model for each output dimension (pred_length * features)
+        # Note: rf_models list must be long enough
+        if len(self.rf_models) < y_flat.shape[1]:
+            self.rf_models = [RandomForestRegressor(n_estimators=10) for _ in range(y_flat.shape[1])]
+
+        for i in range(y_flat.shape[1]):
+            self.rf_models[i].fit(X_flat, y_flat[:, i])
 
     def predict_linear(self, X):
         """
@@ -329,14 +339,13 @@ class ClassicalModelEnsemble:
         predictions = []
 
         # Predict for each output dimension
-        for i in range(self.output_features):
-            pred_flat = self.rf_models[i].predict(X_flat)
-            # Reshape to (samples, pred_length)
-            pred_reshaped = pred_flat.reshape(X.shape[0], -1)
-            predictions.append(pred_reshaped)
+        for i in range(len(self.rf_models)):
+            pred = self.rf_models[i].predict(X_flat)
+            predictions.append(pred)
 
-        # Stack predictions along feature dimension
-        return np.stack(predictions, axis=-1)
+        # Stack and reshape to (samples, pred_length, features)
+        all_preds = np.column_stack(predictions)
+        return all_preds.reshape(X.shape[0], -1, self.output_features)
 
 
 if __name__ == "__main__":

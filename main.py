@@ -98,7 +98,13 @@ def run_dashboard():
     """
     print("📊 Launching Q-Pilot Dashboard...")
     try:
-        os.system("streamlit run dashboard/app.py")
+        # Use the current Python interpreter to run streamlit as a module
+        # This ensures the correct environment and dependencies are used
+        cmd = f'{sys.executable} -m streamlit run dashboard/app.py'
+        # Set PYTHONPATH and encoding environment variables
+        os.environ['PYTHONPATH'] = os.path.dirname(os.path.abspath(__file__))
+        os.environ['PYTHONIOENCODING'] = 'utf-8'
+        os.system(cmd)
     except Exception as e:
         print(f"Error launching dashboard: {e}")
 

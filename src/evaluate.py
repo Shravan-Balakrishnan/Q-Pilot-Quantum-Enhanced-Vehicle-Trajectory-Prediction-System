@@ -326,26 +326,31 @@ class RealTimeComparator:
         # Get predictions from each model
         for model_name, model in self.models.items():
             try:
-                if model_name in ['linear', 'random_forest']:
-                    # Classical models
-                    if hasattr(model, 'predict'):
+                pred = None
+                if model_name in ['linear', 'random_forest', 'lstm']:
+                    # Try model-specific methods first for ensemble objects
+                    method_name = f"predict_{model_name}"
+                    if hasattr(model, method_name):
+                        pred = getattr(model, method_name)(input_sequence)
+                    elif hasattr(model, 'predict'):
                         pred = model.predict(input_sequence)
-                    elif hasattr(model, 'predict_linear'):
-                        pred = model.predict_linear(input_sequence)
-                    elif hasattr(model, 'predict_random_forest'):
-                        pred = model.predict_random_forest(input_sequence)
-                    else:
-                        pred = None
-                else:
-                    # Quantum and LSTM models
+                
+                # If still no prediction, try the fallback/PyTorch logic
+                if pred is None:
+                    # Quantum and other PyTorch models
                     batch_size = input_sequence.shape[0]
                     input_flat = input_sequence.reshape(batch_size, -1)
                     input_tensor = torch.FloatTensor(input_flat)
 
-                    model.eval()
+                    if hasattr(model, 'eval'):
+                        model.eval()
+                    
                     with torch.no_grad():
-                        pred_flat = model(input_tensor).numpy()
-                        pred = pred_flat.reshape(batch_size, -1, input_sequence.shape[2])
+                        if callable(model):
+                            pred_flat = model(input_tensor).numpy()
+                            pred = pred_flat.reshape(batch_size, -1, input_sequence.shape[2])
+                        elif hasattr(model, 'predict'):
+                            pred = model.predict(input_sequence)
 
                 if pred is not None:
                     results[model_name] = pred

@@ -14,6 +14,19 @@ from dataset import generate_synthetic_trajectory
 from classical_model import ClassicalModelEnsemble
 from utils import calculate_metrics
 
+# Ensure UTF-8 encoding for stdout to handle emojis on Windows terminals
+if sys.stdout.encoding != 'utf-8':
+    try:
+        # Python 3.7+
+        import io
+        if hasattr(sys.stdout, 'reconfigure'):
+            sys.stdout.reconfigure(encoding='utf-8')
+        else:
+            # Fallback for older versions or different stream types
+            sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
+    except (AttributeError, ImportError):
+        pass
+
 
 def print_header():
     """Print system header"""
