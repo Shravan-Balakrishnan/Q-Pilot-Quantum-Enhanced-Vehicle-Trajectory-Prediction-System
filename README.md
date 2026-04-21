@@ -104,7 +104,7 @@ The Q-Pilot system features a dynamic comparison engine that identifies the opti
 
 ### 🧠 Why This Happens (The Science)
 
-1.  **Linear Model (Occam's Razor)**: In simple, steady-state motion, a straight line is the most accurate description. Complex models add "noise," whereas the Linear model provides perfect precision for constant-velocity trajectories.
+1.  **Linear Model **: In simple, steady-state motion, a straight line is the most accurate description. Complex models add "noise," whereas the Linear model provides perfect precision for constant-velocity trajectories.
 2.  **LSTM (Temporal Memory)**: LSTMs win during smooth, predictable curves because they remember the history of the trajectory. They are masters of "flow" and temporal consistency.
 3.  **Random Forest (Decision Boundaries)**: Random Forest excels in mid-range urban driving. It uses discrete "decision branches" to handle specific thresholds (like switching lanes) where motion isn't a smooth curve but isn't a straight line either.
 4.  **Quantum Neural Network (Hilbert Space)**: The Quantum model wins in extreme scenarios (sharp swerves/emergency stops). It maps input data into a **High-Dimensional Hilbert Space**, allowing it to solve exponential nonlinearities that classical models simply cannot "see."
